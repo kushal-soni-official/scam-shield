@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.05) 100%); border-bottom: 1px solid rgba(59,130,246,0.3);">
+        <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-chart-line me-2 text-primary"></i> 
+            Live Scam Dashboard
+        </h5>
+    </div>
+    <div class="card-body">
+        <!-- Stats Alert (modern glass style) -->
+        <div class="alert" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; backdrop-filter: blur(4px);">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span><i class="fas fa-chart-simple me-1"></i> Total classifications: <strong>{{ total_classifications }}</strong></span>
+                <span><i class="fas fa-percent me-1"></i> Scam rate: <strong>{{ scam_rate|round(1) }}%</strong></span>
+                <span><i class="fas fa-chart-line me-1"></i> Avg confidence: <strong>{{ avg_conf|round(1) }}%</strong></span>
+                <span class="small text-muted"><i class="fas fa-sync-alt me-1"></i> Updates every 5s</span>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="card h-100" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(59,130,246,0.2); backdrop-filter: blur(4px); transition: transform 0.2s ease;">
+                    <div class="card-header" style="background: rgba(59,130,246,0.15); border-bottom: 1px solid rgba(59,130,246,0.3);">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-chart-pie me-2 text-primary"></i>Scam vs Legitimate
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 380px;">
+                        <canvas id="pieChart" width="400" height="400" style="max-width: 100%; height: auto;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(59,130,246,0.2); backdrop-filter: blur(4px); transition: transform 0.2s ease;">
+                    <div class="card-header" style="background: rgba(59,130,246,0.15); border-bottom: 1px solid rgba(59,130,246,0.3);">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-chart-bar me-2 text-primary"></i>Scams per Day
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 380px;">
+                        <canvas id="barChart" width="400" height="400" style="max-width: 100%; height: auto;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Helper to ensure canvas dimensions are stable ---
+    function setCanvasSize(canvas, width, height) {
+        canvas.width = width;
+        canvas.height = height;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+    }
+
+    // --- Get canvas elements ---
+    const pieCanvas = document.getElementById('pieChart');
+    const barCanvas = document.getElementById('barChart');
+
+    // --- Set fixed dimensions to prevent reflows ---
+    setCanvasSize(pieCanvas, 400, 400);
+    setCanvasSize(barCanvas, 400, 400);
+
+    // --- Initialize charts with fixed dimensions ---
+    const pieCtx = pieCanvas.getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Scam', 'Legitimate'],
+            datasets: [{
+                data: {{ pie }},
+                backgroundColor: ['#ef4444', '#10b981'],
+                borderWidth: 0,
+                hoverOffset: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#e2e8f0', font: { size: 12 } }
+                },
+                tooltip: { backgroundColor: '#1e293b', titleColor: '#f0f3fa', bodyColor: '#9ca3b3' }
+            }
+        }
+    });
+
+    const barCtx = barCanvas.getContext('2d');
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ bar_labels | tojson }},
+            datasets: [{
+                label: 'Scams per Day',
+                data: {{ bar_data }},
+                backgroundColor: '#3b82f6',
+                borderRadius: 8,
+                barPercentage: 0.7,
+                categoryPercentage: 0.8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#9ca3b3' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#9ca3b3' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#e2e8f0' } },
+                tooltip: { backgroundColor: '#1e293b', titleColor: '#f0f3fa', bodyColor: '#9ca3b3' }
+            }
+        }
+    });
+
+    // --- Throttle / debounce updates to avoid UI lag ---
+    let updatePending = false;
+    let updateTimeout = null;
+
+    async function fetchAndUpdate() {
+        if (updatePending) return; // skip if already updating
+        updatePending = true;
+        try {
+            const response = await fetch('/update_data');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            // Update pie chart data
+            if (data.pie && Array.isArray(data.pie)) {
+                pieChart.data.datasets[0].data = data.pie;
+                pieChart.update('none'); // 'none' prevents animation, reducing jank
+            }
+
+            // Update bar chart data
+            if (data.bar_labels && data.bar_data) {
+                barChart.data.labels = data.bar_labels;
+                barChart.data.datasets[0].data = data.bar_data;
+                barChart.update('none');
+            }
+        } catch (err) {
+            console.error('Live update failed:', err);
+        } finally {
+            updatePending = false;
+        }
+    }
+
+    // Schedule updates with debounce to avoid overlapping
+    function scheduleUpdate() {
+        if (updateTimeout) clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(() => {
+            fetchAndUpdate();
+            updateTimeout = null;
+        }, 100); // small delay to coalesce rapid calls
+    }
+
+    // Set up periodic update with a clean interval
+    setInterval(() => {
+        scheduleUpdate();
+    }, 5000);
+
+    // Also respond to visibility changes (optional: stop updates when tab hidden)
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // optionally pause updates
+        } else {
+            // refresh immediately when visible again
+            scheduleUpdate();
+        }
+    });
+
+    // Resize observer to handle container resizing (e.g., window resize)
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            if (entry.target === pieCanvas.parentElement || entry.target === barCanvas.parentElement) {
+                // Trigger a resize on charts (Chart.js already handles, but we can force)
+                pieChart.resize();
+                barChart.resize();
+            }
+        }
+    });
+    resizeObserver.observe(pieCanvas.parentElement);
+    resizeObserver.observe(barCanvas.parentElement);
+</script>
+
+<style>
+    /* Ensure charts have a stable aspect ratio */
+    .card-body canvas {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        height: auto;
+        width: auto;
+    }
+    /* Hover effect on cards */
+    .card-body .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    /* Fix any flicker from transitions */
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    /* Ensure the canvas container doesn't overflow */
+    .card-body {
+        overflow: visible;
+    }
+</style>
+{% endblock %}

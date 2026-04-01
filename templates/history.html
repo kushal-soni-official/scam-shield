@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.05) 100%); border-bottom: 1px solid rgba(59,130,246,0.3);">
+        <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-history me-2 text-primary"></i> 
+            Classification History
+        </h5>
+    </div>
+    <div class="card-body">
+        <!-- Modern search input with icon -->
+        <div class="position-relative mb-4">
+            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="font-size: 0.9rem;"></i>
+            <input type="text" id="search" class="form-control ps-5" placeholder="Search messages or labels..." onkeyup="filterTable()" style="background: rgba(0,0,0,0.3); border-color: rgba(59,130,246,0.2);">
+        </div>
+
+        <!-- Modern table with glass styling -->
+        <div class="table-responsive">
+            <table id="logTable" class="table table-hover align-middle">
+                <thead>
+                    <tr style="border-bottom: 2px solid rgba(59,130,246,0.3);">
+                        <th style="background: transparent; color: #e2e8f0;">Timestamp</th>
+                        <th style="background: transparent; color: #e2e8f0;">Message</th>
+                        <th style="background: transparent; color: #e2e8f0;">Label</th>
+                        <th style="background: transparent; color: #e2e8f0;">Confidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in log_entries %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;">
+                        <td class="text-muted">{{ entry[0] }}</td>
+                        <td>{{ entry[1] }}</td>
+                        <td class="{{ 'scam' if entry[2]=='scam' else 'legitimate' }} fw-bold">{{ entry[2].upper() }}</td>
+                        <td class="{{ 'low-conf' if entry[3] < '70.0' else '' }}">{{ entry[3] }}%</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                            No log entries yet. Start classifying to see history.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Original filter function (unchanged logic)
+    function filterTable() {
+        const input = document.getElementById('search').value.toLowerCase();
+        const table = document.getElementById('logTable');
+        const tr = table.getElementsByTagName('tr');
+        for (let i = 1; i < tr.length; i++) {
+            const td = tr[i].getElementsByTagName('td')[1]; // message column
+            if (td) {
+                tr[i].style.display = td.textContent.toLowerCase().includes(input) ? '' : 'none';
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Override any default table striping to keep modern look */
+    .table tbody tr:hover {
+        background: rgba(59, 130, 246, 0.08) !important;
+    }
+    /* Ensure search input has proper focus state */
+    .form-control:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    /* Empty state icon styling */
+    .text-muted i {
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}

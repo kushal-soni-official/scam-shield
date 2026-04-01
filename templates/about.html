@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.05) 100%); border-bottom: 1px solid rgba(59,130,246,0.3);">
+        <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-info-circle me-2 text-primary"></i> 
+            About ScamShield
+        </h5>
+    </div>
+    <div class="card-body">
+        <p class="lead">
+            <strong>ScamShield</strong> is an AI-powered tool designed to detect common Indian scams 
+            (UPI fraud, digital arrest, lottery scams, refund tricks, government scheme frauds, etc.) 
+            using TF-IDF vectorization and a PyTorch neural network.
+        </p>
+
+        <div class="row mt-4">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(59,130,246,0.2); backdrop-filter: blur(4px); transition: transform 0.2s ease;">
+                    <div class="card-header" style="background: rgba(59,130,246,0.15); border-bottom: 1px solid rgba(59,130,246,0.3);">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-chart-line me-2 text-primary"></i>Key Features
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Batch classification</li>
+                            <li class="mb-2"><i class="fas fa-chart-simple me-2 text-primary"></i> Confidence scoring</li>
+                            <li class="mb-2"><i class="fas fa-chart-line me-2 text-primary"></i> Live dashboard</li>
+                            <li class="mb-2"><i class="fas fa-history me-2 text-primary"></i> History log</li>
+                            <li class="mb-2"><i class="fas fa-file-pdf me-2 text-primary"></i> PDF export</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(59,130,246,0.2); backdrop-filter: blur(4px); transition: transform 0.2s ease;">
+                    <div class="card-header" style="background: rgba(59,130,246,0.15); border-bottom: 1px solid rgba(59,130,246,0.3);">
+                        <h6 class="mb-0 fw-semibold">
+                            <i class="fas fa-database me-2 text-primary"></i>Technical Details
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-microchip me-2 text-primary"></i> Accuracy on test set: <strong>~95.65%</strong></li>
+                            <li class="mb-2"><i class="fas fa-file-alt me-2 text-primary"></i> Log file: <code class="text-primary">scam_log.txt</code></li>
+                            <li class="mb-2"><i class="fas fa-brain me-2 text-primary"></i> Model: TF-IDF + PyTorch</li>
+                            <li class="mb-2"><i class="fas fa-graduation-cap me-2 text-primary"></i> Built for educational use</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New: How It Works Section -->
+        <div class="mt-5">
+            <h6 class="fw-semibold mb-3"><i class="fas fa-cogs me-2 text-primary"></i>How It Works</h6>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center p-3" style="background: rgba(0,0,0,0.2); border-radius: 12px;">
+                        <i class="fas fa-language fa-2x text-primary mb-2"></i>
+                        <p class="mb-0 small">Text is transformed into numerical features using TF-IDF.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3" style="background: rgba(0,0,0,0.2); border-radius: 12px;">
+                        <i class="fas fa-network-wired fa-2x text-primary mb-2"></i>
+                        <p class="mb-0 small">A PyTorch neural network analyzes patterns and context.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3" style="background: rgba(0,0,0,0.2); border-radius: 12px;">
+                        <i class="fas fa-chart-simple fa-2x text-primary mb-2"></i>
+                        <p class="mb-0 small">Results are displayed with confidence scores and logged for review.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New: Impact Statistics -->
+        <div class="mt-5">
+            <h6 class="fw-semibold mb-3"><i class="fas fa-chart-simple me-2 text-primary"></i>Impact & Awareness</h6>
+            <div class="row">
+                <div class="col-12">
+                    <div class="p-4" style="background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(59,130,246,0.05) 100%); border-radius: 16px;">
+                        <p>In 2025 alone, over <strong>1.5 million cyber fraud cases</strong> were reported in India. ScamShield helps you stay one step ahead by identifying scam messages before they cause harm. Remember: <strong>never share OTPs, bank details, or click suspicious links.</strong></p>
+                        <p class="mb-0">Together, we can build a safer digital India.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Original Helpline Alert (enhanced style) -->
+        <div class="alert mt-4" style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px;">
+            <i class="fas fa-shield-alt me-2 text-primary"></i>
+            <strong>Stay vigilant.</strong> Report confirmed scams to cyber helpline <strong class="text-primary">1930</strong>.
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Additional styles for the about page */
+    .card-body .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-body .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+    .card-header .fa, .card-body .fa {
+        font-size: 0.9rem;
+    }
+    code {
+        background: rgba(0,0,0,0.4);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}

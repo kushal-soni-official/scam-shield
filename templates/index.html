@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header" style="background: linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(59,130,246,0.05) 100%); border-bottom: 1px solid rgba(59,130,246,0.3);">
+        <h5 class="mb-0 fw-semibold">
+            <i class="fas fa-shield-alt me-2 text-primary"></i> 
+            AI Scam Detector
+        </h5>
+        <p class="small text-muted mt-2 mb-0">
+            <i class="fas fa-microchip me-1"></i> Powered by TF-IDF + PyTorch • 
+            Detects UPI fraud, digital arrest, lottery scams, government scheme frauds, etc.
+        </p>
+    </div>
+    <div class="card-body">
+        <!-- Input area with modern glass styling -->
+        <div class="mb-4">
+            <label for="messages" class="form-label fw-semibold">
+                <i class="fas fa-envelope me-1 text-primary"></i> Messages to Analyze
+            </label>
+            <textarea id="messages" class="form-control" rows="6"
+                      placeholder="Paste one message per line for batch processing..." 
+                      oninput="updatePreview()"></textarea>
+        </div>
+
+        <!-- Preview counter with icon -->
+        <div id="preview" class="small text-muted mb-4">
+            <i class="fas fa-chart-simple me-1"></i> Preview: 0 messages entered
+        </div>
+
+        <!-- Action buttons -->
+        <div class="d-flex flex-wrap gap-3 mb-4">
+            <button class="btn btn-primary" onclick="classify()">
+                <i class="fas fa-play me-1"></i> Classify Now
+            </button>
+            <button class="btn btn-outline-secondary" onclick="clearInput()">
+                <i class="fas fa-eraser me-1"></i> Clear
+            </button>
+        </div>
+
+        <!-- Results container -->
+        <div id="results" class="mt-4"></div>
+        <div id="save-note" class="mt-3 small text-muted"></div>
+    </div>
+</div>
+
+<script>
+    // --- All original functions preserved exactly ---
+    async function classify() {
+        const btn = document.querySelector('button[onclick="classify()"]');
+        const resultsDiv = document.getElementById('results');
+        const noteDiv = document.getElementById('save-note');
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Analyzing...';
+        resultsDiv.innerHTML = '<div class="text-center my-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-3">Scanning messages...</p></div>';
+        noteDiv.innerHTML = '';
+
+        try {
+            const input = document.getElementById('messages').value.trim();
+            const messages = input.split('\n').map(m => m.trim()).filter(m => m);
+            if (messages.length === 0) throw new Error('Please enter at least one message');
+
+            const response = await fetch('/classify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages })
+            });
+
+            if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error + (data.traceback ? '\n' + data.traceback : ''));
+
+            let html = '<div class="table-responsive"><table class="table table-hover align-middle">';
+            html += '<thead><tr><th>Message</th><th>Label</th><th>Confidence</th><th>Action</th></tr></thead><tbody>';
+
+            data.forEach(item => {
+                const confPercent = item.conf.toFixed(2);
+                const labelClass = item.label === 'scam' ? 'scam fw-bold' : 'legitimate fw-bold';
+
+                html += `<tr>
+                    <td class="text-break">${item.msg.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                    <td class="${labelClass}">${item.label.toUpperCase()}</td>
+                    <td>${confPercent}%</td>
+                    <td><button class="btn btn-sm btn-outline-info" onclick="copyText('${item.msg.replace(/'/g, "\\'")}')"><i class="fas fa-copy"></i></button></td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+
+            resultsDiv.innerHTML = html;
+
+            noteDiv.innerHTML = `Processed ${data.length} message${data.length !== 1 ? 's' : ''}. ` +
+                               'Results automatically logged. ' +
+                               '<button class="btn btn-sm btn-outline-success" onclick="exportToPDF()"><i class="fas fa-file-pdf me-1"></i> Export to PDF</button>';
+        } catch (err) {
+            resultsDiv.innerHTML = `<div class="alert alert-danger mt-4">Error: ${err.message}</div>`;
+            console.error(err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-play me-1"></i> Classify Now';
+        }
+    }
+
+    function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Message copied to clipboard!');
+        }).catch(() => alert('Copy failed'));
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text('ScamShield Pro - Detection Results', 20, 20);
+        doc.setFontSize(12);
+        let y = 35;
+
+        document.querySelectorAll('#results tbody tr').forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length) {
+                const msgPreview = cells[0].textContent.substring(0, 60) + (cells[0].textContent.length > 60 ? '...' : '');
+                doc.text(`${msgPreview} - ${cells[1].textContent} (${cells[2].textContent})`, 20, y);
+                y += 10;
+                if (y > 270) { doc.addPage(); y = 20; }
+            }
+        });
+
+        doc.save('scamshield_results.pdf');
+    }
+
+    function updatePreview() {
+        const input = document.getElementById('messages').value;
+        const count = input.split('\n').filter(m => m.trim()).length;
+        document.getElementById('preview').innerHTML = `<i class="fas fa-chart-simple me-1"></i> Preview: ${count} message${count !== 1 ? 's' : ''} entered`;
+    }
+
+    function clearInput() {
+        document.getElementById('messages').value = '';
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('save-note').innerHTML = '';
+        updatePreview();
+    }
+</script>
+
+<!-- Additional style overrides to match global design (only for local refinements) -->
+<style>
+    /* Ensure the textarea matches global form styles */
+    #messages {
+        background: rgba(0,0,0,0.3);
+        border-color: rgba(59,130,246,0.2);
+    }
+    #messages:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    /* Table enhancements for result table */
+    #results .table {
+        --bs-table-bg: transparent;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    #results .table thead tr {
+        border-bottom: 2px solid rgba(59,130,246,0.3);
+    }
+    #results .table th {
+        background: transparent;
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: var(--space-3);
+    }
+    #results .table td {
+        padding: var(--space-3);
+        vertical-align: middle;
+    }
+    #results .table tbody tr:hover {
+        background: rgba(59,130,246,0.08);
+    }
+    /* Alert styling for errors */
+    .alert-danger {
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.3);
+        color: #fecaca;
+        border-radius: var(--radius-md);
+    }
+</style>
+{% endblock %}
