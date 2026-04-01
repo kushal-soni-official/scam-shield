@@ -94,7 +94,7 @@ A fully offline, privacy-focused native Android app that monitors incoming SMS i
 <h2 align="center">📸Android Screenshot</h2>
 
 <div align="center">
-    <img src="app_screenshot.jpeg" width="300">
+    <img src="img/app_screenshot.jpeg" width="300">
 </div>
 
 ---
