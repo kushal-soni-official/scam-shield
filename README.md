@@ -100,7 +100,7 @@ A fully offline, privacy-focused native Android app that monitors incoming SMS i
 ---
 
 ### 📥 Download APK
-[`Scam-Shield.apk`](https://github.com/kushal-soni-cyber/Scam-Shield/blob/main/Scam-Shield.apk)  
+[`Scam-Shield.apk`](https://github.com/kushal-soni-official/Scam-Shield/blob/main/Scam-Shield.apk)  
 *(Right‑click and save, or tap to download on mobile)*
 
 
